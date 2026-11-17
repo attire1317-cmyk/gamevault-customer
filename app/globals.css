@@ -73,6 +73,7 @@ h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; }
   .nav-links { position: fixed; inset: 64px 0 auto 0; flex-direction: column; align-items: stretch; gap: 4px; padding: 16px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); transform: translateY(-12px); opacity: 0; pointer-events: none; transition: transform 300ms var(--ease), opacity 200ms; }
   .nav-links.is-open { transform: none; opacity: 1; pointer-events: auto; }
   .nav-link { padding: 14px 12px; font-size: 1.0625rem; }
+  .nav-link.is-on, .nav-link.is-on:hover { background: var(--accent); }
   .nav-auth { margin: 8px 0 0; flex-direction: column; align-items: stretch; }
   .nav-auth .btn { min-height: 48px; }
 }
@@ -348,7 +349,8 @@ h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; }
 .nav-link { position: relative; }
 .nav-link.is-on { color: var(--accent-ink); }
 .nav-link.is-on:hover { background: transparent; color: var(--accent-ink); }
-.nav-pill { position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--accent); }
+.nav-links { position: relative; }
+.nav-pill { position: absolute; left: 0; top: 0; border-radius: var(--r-pill); background: var(--accent); pointer-events: none; will-change: transform, width; }
 .nav-label { position: relative; }
 .avatar { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); color: var(--accent-text); font-weight: 700; border: 1px solid var(--line); }
 
@@ -388,3 +390,60 @@ h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; }
 .marquee-item > .card-game { width: 100%; }
 .marquee-static { overflow-x: auto; -webkit-mask-image: none; mask-image: none; scroll-snap-type: x proximity; }
 .marquee-static .marquee-item { scroll-snap-align: start; }
+
+/* Product pages (games and consoles) */
+.card-media-link { display: block; }
+.card-body h3 a:hover { color: var(--accent-text); }
+.prices.one { grid-template-columns: 1fr; }
+.card-actions.single { grid-template-columns: 1fr; }
+.card-game.mini { text-decoration: none; color: inherit; }
+.crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; font-size: 0.875rem; color: var(--muted); }
+.crumbs a:hover { color: var(--accent-text); }
+.crumbs [aria-current] { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+.pd { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+.pd-media { position: sticky; top: 88px; aspect-ratio: 4 / 5; border-radius: 28px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.pd-media img { width: 100%; height: 100%; object-fit: cover; }
+.pd-media .badge { position: absolute; top: 16px; left: 16px; }
+.pd-media.skeleton { min-height: 0; }
+.pd-info { display: grid; gap: 20px; min-width: 0; }
+.pd-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 12px; border-radius: var(--r-pill); background: var(--surface-2); color: var(--muted); font-size: 0.8125rem; font-weight: 600; }
+.tag-hot { background: var(--deal); color: var(--deal-ink); }
+.pd-title { font-size: clamp(1.875rem, 4vw, 2.75rem); letter-spacing: -0.035em; line-height: 1.08; overflow-wrap: anywhere; }
+.pd-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 14px; }
+.pd-price strong { font-size: 2rem; letter-spacing: -0.03em; }
+.pd-price s { color: var(--muted); font-size: 1.125rem; }
+.pd-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.opt { position: relative; min-height: 76px; padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); text-align: left; transition: border-color 200ms, color 200ms, transform 120ms var(--ease); }
+.opt:active { transform: scale(0.98); }
+.opt:hover { border-color: color-mix(in srgb, var(--accent-text) 45%, transparent); }
+.opt.is-on { border-color: transparent; color: var(--accent-ink); }
+.opt-pill { position: absolute; inset: 0; border-radius: 18px; background: var(--accent); }
+.opt-body { position: relative; display: grid; gap: 2px; }
+.opt-label { font-size: 0.8125rem; font-weight: 600; opacity: 0.8; }
+.opt-body strong { font-size: 1.25rem; }
+.opt-body s { font-size: 0.8125rem; opacity: 0.7; }
+.pd-buy { display: grid; gap: 18px; padding: 22px; border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--line); }
+.stockline { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.9375rem; font-weight: 600; }
+.stockline .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.stockline.is-ok { color: var(--ok); }
+.stockline.is-low { color: var(--warn); }
+.stockline.is-out { color: var(--danger); }
+.offer-note { margin-left: auto; padding: 3px 10px; border-radius: var(--r-pill); background: var(--deal); color: var(--deal-ink); font-size: 0.75rem; font-weight: 650; }
+.pd-trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.pd-trust > div { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 16px; background: var(--surface-2); font-size: 0.875rem; color: var(--muted); }
+.pd-trust svg { flex: none; color: var(--accent-text); }
+.pd-about { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: 40px; margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--line); }
+.pd-about h2 { font-size: 1.375rem; margin-bottom: 12px; }
+.pd-about p { max-width: 62ch; white-space: pre-line; }
+.specs { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; background: var(--surface); align-self: start; }
+.specs > div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 18px; }
+.specs > div + div { border-top: 1px solid var(--line); }
+.specs dt { color: var(--muted); }
+.specs dd { text-align: right; font-weight: 600; }
+@media (max-width: 860px) {
+  .pd, .pd-about { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .pd-media { position: relative; top: 0; aspect-ratio: 4 / 3; border-radius: 22px; }
+  .pd-buy { padding: 18px; }
+  .offer-note { margin-left: 0; }
+}

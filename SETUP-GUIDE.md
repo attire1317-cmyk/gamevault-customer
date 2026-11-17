@@ -139,3 +139,7 @@ If a secret ever reaches GitHub, treat it as leaked: Supabase, Project Settings,
 - The login and request rate limiter is in memory per server instance. On Vercel it is weak protection. For real protection use Upstash Redis or Vercel's firewall rate limits.
 - No online payments, email reminders or password reset (same as before).
 - The code was syntax- and import-checked, but could not be run against a live Supabase project in the environment where it was written. If something errors on first run, send the exact message.
+
+## Upgrading an existing database (consoles and accessories)
+
+Already ran `schema.sql` before? Open the Supabase SQL editor, paste `supabase/add-products.sql` and click **Run**. It is safe to run twice. Fresh installs get this from `schema.sql` already.

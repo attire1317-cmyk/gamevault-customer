@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Tag } from '@phosphor-icons/react';
 import { money } from '@/lib/format';
@@ -34,20 +35,24 @@ export default function GameCard({ game, onAct, index = 0, flat = false, clone =
             transition: { ...spring, delay: (index % 4) * 0.06, opacity: { duration: 0.4, delay: (index % 4) * 0.06 } },
           })}
     >
-      <div className="card-media">
+      <Link href={`/games/${game.id}`} className="card-media card-media-link" tabIndex={clone ? -1 : undefined} aria-label={`${game.title}, view details`}>
         <img src={game.imageUrl} alt={`${game.title} cover`} width="640" height="800" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
         {(game.rentPercent > 0 || game.buyPercent > 0) && (
           <span className="badge badge-deal">
             <Tag size={14} weight="fill" /> Up to {Math.max(game.rentPercent, game.buyPercent)}% off
           </span>
         )}
-      </div>
+      </Link>
       <div className="card-body">
         <p className="card-meta">
           {game.platform}
           {game.genre ? `, ${game.genre}` : ''}
         </p>
-        <h3>{game.title}</h3>
+        <h3>
+          <Link href={`/games/${game.id}`} tabIndex={clone ? -1 : undefined}>
+            {game.title}
+          </Link>
+        </h3>
         <div className="prices">
           <div>
             <span className="muted">Rent</span>

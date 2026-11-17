@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { GameController, List, X, SignOut } from '@phosphor-icons/react';
 import { api } from '@/lib/api';
@@ -16,8 +16,10 @@ export default function Nav() {
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-
   const [scrolled, setScrolled] = useState(false);
+  const [pill, setPill] = useState(null);
+  const wrap = useRef(null);
+  const items = useRef({});
 
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
@@ -40,9 +42,32 @@ export default function Nav() {
   const links = [
     { href: '/', label: 'Home' },
     { href: '/games', label: 'Games' },
+    { href: '/shop', label: 'Shop' },
     ...(user ? [{ href: '/account', label: 'My rentals' }] : []),
   ];
-  const isOn = (href) => (href === '/account' ? path === '/account' : href === '/games' ? path.startsWith('/games') : path === '/');
+  const isOn = (href) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
+  const active = links.find((l) => isOn(l.href))?.href;
+
+  // The highlight is placed from the link's own offsets inside the nav, never from page
+  // coordinates. The old shared-layout animation was measured against the page scroll,
+  // so after scrolling the badge flew in from below instead of sliding between links.
+  const measure = useCallback(() => {
+    const el = items.current[active];
+    if (!el || window.matchMedia('(max-width: 767px)').matches) return setPill(null);
+    setPill({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+  }, [active]);
+
+  useLayoutEffect(() => {
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (wrap.current) ro.observe(wrap.current);
+    Object.values(items.current).forEach((el) => el && ro.observe(el));
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [measure, links.length]);
 
   return (
     <header className={`nav ${scrolled ? 'is-scrolled' : ''}`}>
@@ -52,10 +77,18 @@ export default function Nav() {
           <span>{STORE}</span>
         </Link>
 
-        <nav className={`nav-links ${open ? 'is-open' : ''}`} aria-label="Main">
+        <nav ref={wrap} className={`nav-links ${open ? 'is-open' : ''}`} aria-label="Main">
+          {pill && <motion.span className="nav-pill" aria-hidden="true" initial={false} animate={{ x: pill.x, y: pill.y, width: pill.w, height: pill.h }} transition={spring} />}
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className={`nav-link ${isOn(l.href) ? 'is-on' : ''}`} aria-current={isOn(l.href) ? 'page' : undefined}>
-              {isOn(l.href) && <motion.span layoutId="nav-pill" className="nav-pill" transition={spring} />}
+            <Link
+              key={l.href}
+              href={l.href}
+              ref={(el) => {
+                items.current[l.href] = el;
+              }}
+              className={`nav-link ${isOn(l.href) ? 'is-on' : ''}`}
+              aria-current={isOn(l.href) ? 'page' : undefined}
+            >
               <span className="nav-label">{l.label}</span>
             </Link>
           ))}

@@ -43,6 +43,7 @@ function RentalCard({ r, now }) {
 export default function AccountClient({ name }) {
   const rentals = useLive(() => api('/api/rentals'));
   const orders = useLive(() => api('/api/orders'));
+  const gear = useLive(() => api('/api/product-orders'));
   const now = useNow(rentals.data?.serverNow);
 
   const active = rentals.data?.rentals.filter((r) => r.status === 'active') || [];
@@ -109,6 +110,27 @@ export default function AccountClient({ name }) {
           </Stagger>
         )}
       </section>
+
+      {gear.data?.orders.length > 0 && (
+        <section className="block">
+          <h2>Consoles and accessories</h2>
+          <Stagger className="stack">
+            {gear.data.orders.map((o) => (
+              <Item as="article" key={o.id} className="rental is-done">
+                <img src={o.imageUrl} alt="" width="84" height="105" loading="lazy" referrerPolicy="no-referrer" />
+                <div className="rental-main">
+                  <h3>{o.name}</h3>
+                  <p className="muted">
+                    {o.qty} x {money(o.unitPrice)}, {fmtDate(o.createdAt)}
+                  </p>
+                  <p className="rental-due mono">{money(o.total)}</p>
+                </div>
+                <span className={`badge badge-${o.status}`}>{o.status}</span>
+              </Item>
+            ))}
+          </Stagger>
+        </section>
+      )}
     </main>
   );
 }
