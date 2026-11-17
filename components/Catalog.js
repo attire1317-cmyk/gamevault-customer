@@ -1,0 +1,143 @@
+'use client';
+import { useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MagnifyingGlass } from '@phosphor-icons/react';
+import { api } from '@/lib/api';
+import { useLive, useNow } from './hooks';
+import { useShop } from './useShop';
+import GameCard, { GridSkeleton } from './GameCard';
+import Pagination from './Pagination';
+import { spring } from './motion';
+
+const PLATFORMS = ['All', 'PS5', 'PS4', 'Xbox Series X|S', 'Xbox One', 'Nintendo Switch'];
+const PAGE_SIZE = 8;
+
+// Pages slide in the direction you are travelling.
+const slide = {
+  enter: (d) => ({ opacity: 0, x: d * 48 }),
+  center: { opacity: 1, x: 0 },
+  exit: (d) => ({ opacity: 0, x: d * -48 }),
+};
+
+export default function Catalog() {
+  const { data, error, refresh } = useLive(() => api('/api/games'));
+  const now = useNow(data?.serverNow);
+  const { act, sheet } = useShop(data, now);
+  const [platform, setPlatform] = useState('All');
+  const [q, setQ] = useState('');
+  const [[page, dir], setPage] = useState([1, 0]);
+  const top = useRef(null);
+
+  const games = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return (data?.games || []).filter(
+      (g) => (platform === 'All' || g.platform === platform) && (!term || `${g.title} ${g.genre}`.toLowerCase().includes(term))
+    );
+  }, [data, platform, q]);
+
+  const pages = Math.max(1, Math.ceil(games.length / PAGE_SIZE));
+  const current = Math.min(page, pages);
+  const shown = games.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  function go(n) {
+    setPage([n, n > current ? 1 : -1]);
+    const el = top.current;
+    if (el && el.getBoundingClientRect().top < 80) {
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+  const resetPage = () => setPage([1, 0]);
+
+  return (
+    <>
+      <section className="section games-page" ref={top}>
+        <div className="container">
+          <h1 className="section-title">All games</h1>
+          <div className="toolbar">
+            <div className="search">
+              <MagnifyingGlass size={18} />
+              <input
+                type="search"
+                placeholder="Search by title or genre"
+                aria-label="Search games"
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  resetPage();
+                }}
+                maxLength={60}
+              />
+            </div>
+            <div className="chips" role="group" aria-label="Platform">
+              {PLATFORMS.map((p) => (
+                <button
+                  key={p}
+                  className={`chip ${platform === p ? 'is-on' : ''}`}
+                  onClick={() => {
+                    setPlatform(p);
+                    resetPage();
+                  }}
+                >
+                  {platform === p && <motion.span layoutId="chip-pill" className="chip-pill" transition={spring} />}
+                  <span className="chip-label">{p}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && !data ? (
+            <div className="empty">
+              <p>Could not load games.</p>
+              <button className="btn btn-ghost" onClick={refresh}>
+                Try again
+              </button>
+            </div>
+          ) : !data ? (
+            <GridSkeleton n={8} />
+          ) : games.length === 0 ? (
+            <div className="empty">
+              <p>{data.games.length === 0 ? 'No games are listed yet. Check back soon.' : 'No games match that search.'}</p>
+              {data.games.length > 0 && (
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setQ('');
+                    setPlatform('All');
+                    resetPage();
+                  }}
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="muted result-count" aria-live="polite">
+                Showing {(current - 1) * PAGE_SIZE + 1} to {(current - 1) * PAGE_SIZE + shown.length} of {games.length}
+              </p>
+              <AnimatePresence mode="wait" custom={dir} initial={false}>
+                <motion.div
+                  key={current}
+                  className="grid"
+                  custom={dir}
+                  variants={slide}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {shown.map((g, i) => (
+                    <GameCard key={g.id} game={g} index={i} onAct={act} />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+              <Pagination page={current} pages={pages} onChange={go} />
+            </>
+          )}
+        </div>
+      </section>
+      {sheet}
+    </>
+  );
+}
