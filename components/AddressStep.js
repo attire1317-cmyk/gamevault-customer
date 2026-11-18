@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowsLeftRight, Briefcase, Check, House, MapPin, Plus } from '@phosphor-icons/react';
+import { ArrowsLeftRight, Briefcase, Check, CheckCircle, House, MapPin, Plus, Spinner, WarningCircle } from '@phosphor-icons/react';
 import { api, errText } from '@/lib/api';
 import { useLive } from './hooks';
 import Sheet from './Sheet';
@@ -78,6 +78,36 @@ export function AddressForm({ initial, defaultName = '', defaultPhone = '', onSu
   const [error, setError] = useState('');
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
 
+  // Pincode -> city and state. Fills the two fields once; they stay fully editable afterwards.
+  const [pin, setPin] = useState({ state: 'idle', areas: [] }); // idle | loading | ok | none | error
+  const [flash, setFlash] = useState(0);
+  const looked = useRef(initial?.pincode ?? '');
+  useEffect(() => {
+    if (!/^[1-9][0-9]{5}$/.test(f.pincode)) {
+      if (f.pincode !== looked.current) setPin({ state: 'idle', areas: [] });
+      return;
+    }
+    if (f.pincode === looked.current) return;
+    looked.current = f.pincode;
+    const ctl = new AbortController();
+    setPin({ state: 'loading', areas: [] });
+    fetch(`/api/pincode/${f.pincode}`, { signal: ctl.signal, credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('lookup'))))
+      .then((d) => {
+        if (!d.found) return setPin({ state: 'none', areas: [] });
+        setF((x) => (x.pincode === looked.current ? { ...x, city: d.city, state: d.state } : x));
+        setFlash((n) => n + 1);
+        setPin({ state: 'ok', areas: d.areas || [] });
+      })
+      .catch((e) => {
+        if (e.name !== 'AbortError') {
+          looked.current = ''; // allow a retry when the number is touched again
+          setPin({ state: 'error', areas: [] });
+        }
+      });
+    return () => ctl.abort();
+  }, [f.pincode]);
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -122,17 +152,54 @@ export function AddressForm({ initial, defaultName = '', defaultPhone = '', onSu
         <label htmlFor={`${uid}-2`}>Landmark (optional)</label>
         <input id={`${uid}-2`} autoComplete="address-line2" value={f.line2} onChange={set('line2')} maxLength={120} />
       </div>
+      <div className="field span-2">
+        <label htmlFor={`${uid}-z`}>Pincode</label>
+        <div className="pin-wrap">
+          <input id={`${uid}-z`} inputMode="numeric" autoComplete="postal-code" placeholder="6 digit pincode" aria-describedby={`${uid}-pin`} value={f.pincode} onChange={(e) => setF((x) => ({ ...x, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />
+          <AnimatePresence mode="wait" initial={false}>
+            {pin.state !== 'idle' && (
+              <motion.span key={pin.state} id={`${uid}-pin`} className={`pin-status is-${pin.state}`} role="status" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2, ease }}>
+                {pin.state === 'loading' && (
+                  <>
+                    <Spinner size={16} weight="bold" className="spin" /> Finding city
+                  </>
+                )}
+                {pin.state === 'ok' && (
+                  <>
+                    <CheckCircle size={16} weight="fill" /> Found
+                  </>
+                )}
+                {pin.state === 'none' && (
+                  <>
+                    <WarningCircle size={16} weight="fill" /> Not found
+                  </>
+                )}
+                {pin.state === 'error' && (
+                  <>
+                    <WarningCircle size={16} weight="fill" /> Try again
+                  </>
+                )}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+        <AnimatePresence initial={false}>
+          {(pin.state === 'ok' || pin.state === 'none' || pin.state === 'error') && (
+            <motion.p className="hint pin-hint" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25, ease }}>
+              {pin.state === 'ok' && `City and state filled in${pin.areas.length ? ` (${pin.areas.slice(0, 2).join(', ')})` : ''}. Change them if they are not right.`}
+              {pin.state === 'none' && 'We could not find this pincode. Enter the city and state yourself.'}
+              {pin.state === 'error' && 'The lookup did not work. Enter the city and state yourself.'}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
       <div className="field">
         <label htmlFor={`${uid}-c`}>City</label>
-        <input id={`${uid}-c`} autoComplete="address-level2" value={f.city} onChange={set('city')} maxLength={60} />
+        <input key={`c${flash}`} id={`${uid}-c`} className={flash ? 'is-filled' : ''} autoComplete="address-level2" value={f.city} onChange={set('city')} maxLength={60} />
       </div>
       <div className="field">
         <label htmlFor={`${uid}-s`}>State</label>
-        <input id={`${uid}-s`} autoComplete="address-level1" value={f.state} onChange={set('state')} maxLength={60} />
-      </div>
-      <div className="field">
-        <label htmlFor={`${uid}-z`}>Pincode</label>
-        <input id={`${uid}-z`} inputMode="numeric" autoComplete="postal-code" value={f.pincode} onChange={(e) => setF((x) => ({ ...x, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />
+        <input key={`s${flash}`} id={`${uid}-s`} className={flash ? 'is-filled' : ''} autoComplete="address-level1" value={f.state} onChange={set('state')} maxLength={60} />
       </div>
       {showDefault && (
         <label className="check">

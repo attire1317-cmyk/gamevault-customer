@@ -619,3 +619,18 @@ a.notif-item:hover { background: var(--surface-2); }
 .addr-tile { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 170px; padding: 20px; border-radius: 18px; border: 1px dashed var(--line); background: transparent; color: var(--accent-text); text-align: center; transition: background 200ms, border-color 200ms; }
 .addr-tile:hover { background: var(--surface); border-color: var(--accent-text); }
 .addr-tile .muted { font-size: 0.875rem; }
+
+/* Pincode lookup */
+.pin-wrap { position: relative; }
+.pin-wrap { display: block; }
+.pin-wrap input { width: 100%; padding-right: 128px; text-overflow: ellipsis; }
+.pin-status { position: absolute; right: 10px; top: 0; bottom: 0; margin-block: auto; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 650; background: var(--surface-2); color: var(--muted); pointer-events: none; }
+.pin-status { box-sizing: border-box; line-height: 1; white-space: nowrap; }
+.pin-status.is-ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.pin-status.is-none, .pin-status.is-error { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pin-hint { overflow: hidden; margin: 0; padding-top: 8px; line-height: 1.45; overflow-wrap: anywhere; }
+.spin { animation: pin-spin 0.9s linear infinite; }
+@keyframes pin-spin { to { transform: rotate(360deg); } }
+.addr-form input.is-filled { animation: pin-flash 1.1s var(--ease, ease-out); }
+@keyframes pin-flash { 0% { background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .spin, .addr-form input.is-filled { animation: none; } }
