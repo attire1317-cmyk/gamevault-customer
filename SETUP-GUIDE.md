@@ -143,3 +143,13 @@ If a secret ever reaches GitHub, treat it as leaked: Supabase, Project Settings,
 ## Upgrading an existing database (consoles and accessories)
 
 Already ran `schema.sql` before? Open the Supabase SQL editor, paste `supabase/add-products.sql` and click **Run**. It is safe to run twice. Fresh installs get this from `schema.sql` already.
+
+## Upgrading: saved items, notifications, cart, overview stats
+
+Already ran `schema.sql` before? Run `supabase/add-products.sql` first if you have not (consoles and accessories), then paste `supabase/add-features.sql` into the Supabase SQL editor and click **Run**. Both are safe to run twice. Fresh installs get everything from `schema.sql`.
+
+### Reminders and email (customer app)
+
+- Due-soon (2 days) and overdue reminders, order updates and back-in-stock alerts appear in the bell in the navbar. No setup needed: reminders are created whenever a signed-in customer's page loads (at most every 10 minutes).
+- To also run them on a schedule and send email: set `CRON_SECRET` (Vercel calls `/api/cron/notify` daily through `vercel.json`), plus `RESEND_API_KEY` and `MAIL_FROM` from resend.com.
+- In the admin app, Overview and Rentals have a WhatsApp button that opens a pre-written reminder to the customer.

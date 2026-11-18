@@ -7,17 +7,21 @@ import { useLive, useNow } from './hooks';
 import { useShop } from './useShop';
 import GameCard, { GridSkeleton } from './GameCard';
 import Pagination from './Pagination';
-import { spring } from './motion';
+import SortBar from './SortBar';
+import { spring, pageSlide as slide } from './motion';
 
 const PLATFORMS = ['All', 'PS5', 'PS4', 'Xbox Series X|S', 'Xbox One', 'Nintendo Switch'];
-const PAGE_SIZE = 8;
-
-// Pages slide in the direction you are travelling.
-const slide = {
-  enter: (d) => ({ opacity: 0, x: d * 48 }),
-  center: { opacity: 1, x: 0 },
-  exit: (d) => ({ opacity: 0, x: d * -48 }),
-};
+const PAGE_SIZE = 12;
+const SORTS = [
+  ['new', 'Featured'],
+  ['low', 'Price: low to high'],
+  ['high', 'Price: high to low'],
+  ['deal', 'Biggest discount'],
+  ['az', 'Title A to Z'],
+];
+const price = (g) => (g.salePrice > 0 ? g.buyFinal : g.rentFinal);
+const discount = (g) => Math.max(g.buyPercent, g.rentPercent);
+const inStock = (g) => (g.salePrice > 0 && g.stockSale > 0) || (g.rentPerDay > 0 && g.stockRent > 0);
 
 export default function Catalog() {
   const { data, error, refresh } = useLive(() => api('/api/games'));
@@ -25,15 +29,24 @@ export default function Catalog() {
   const { act, sheet } = useShop(data, now);
   const [platform, setPlatform] = useState('All');
   const [q, setQ] = useState('');
+  const [sort, setSort] = useState('new');
+  const [deals, setDeals] = useState(false);
+  const [stock, setStock] = useState(false);
   const [[page, dir], setPage] = useState([1, 0]);
   const top = useRef(null);
 
   const games = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return (data?.games || []).filter(
-      (g) => (platform === 'All' || g.platform === platform) && (!term || `${g.title} ${g.genre}`.toLowerCase().includes(term))
+    const list = (data?.games || []).filter(
+      (g) =>
+        (platform === 'All' || g.platform === platform) &&
+        (!term || `${g.title} ${g.genre}`.toLowerCase().includes(term)) &&
+        (!deals || discount(g) > 0) &&
+        (!stock || inStock(g))
     );
-  }, [data, platform, q]);
+    const by = { low: (a, b) => price(a) - price(b), high: (a, b) => price(b) - price(a), deal: (a, b) => discount(b) - discount(a), az: (a, b) => a.title.localeCompare(b.title) }[sort];
+    return by ? [...list].sort(by) : list;
+  }, [data, platform, q, sort, deals, stock]);
 
   const pages = Math.max(1, Math.ceil(games.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -84,6 +97,7 @@ export default function Catalog() {
                 </button>
               ))}
             </div>
+            <SortBar sort={sort} onSort={(v) => { setSort(v); resetPage(); }} options={SORTS} deals={deals} onDeals={(v) => { setDeals(v); resetPage(); }} stock={stock} onStock={(v) => { setStock(v); resetPage(); }} />
           </div>
 
           {error && !data ? (
@@ -94,7 +108,7 @@ export default function Catalog() {
               </button>
             </div>
           ) : !data ? (
-            <GridSkeleton n={8} />
+            <GridSkeleton n={PAGE_SIZE} />
           ) : games.length === 0 ? (
             <div className="empty">
               <p>{data.games.length === 0 ? 'No games are listed yet. Check back soon.' : 'No games match that search.'}</p>
@@ -104,6 +118,8 @@ export default function Catalog() {
                   onClick={() => {
                     setQ('');
                     setPlatform('All');
+                    setDeals(false);
+                    setStock(false);
                     resetPage();
                   }}
                 >

@@ -9,6 +9,7 @@ import { money, fmtDate, untilEnd } from '@/lib/format';
 import { useLive, useNow, useUser } from './hooks';
 import GameCard from './GameCard';
 import { toast } from './Toaster';
+import { WishButton } from './wish';
 import { Stagger, Item, spring } from './motion';
 
 const DAY = 86_400_000;
@@ -219,6 +220,11 @@ export default function GameDetail({ id }) {
               </button>
             </Item>
           )}
+
+          <Item className="pd-save">
+            <WishButton kind="game" id={game.id} labelled soldOut={stock < 1} />
+            {stock < 1 && <span className="muted">Save it and we will tell you when it is back.</span>}
+          </Item>
 
           <Item className="pd-trust">
             <div>

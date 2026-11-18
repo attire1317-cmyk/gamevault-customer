@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Tag } from '@phosphor-icons/react';
 import { money } from '@/lib/format';
 import { spring } from './motion';
+import { WishButton } from './wish';
 
 export function GridSkeleton({ n = 6 }) {
   return (
@@ -43,6 +44,7 @@ export default function GameCard({ game, onAct, index = 0, flat = false, clone =
           </span>
         )}
       </Link>
+      {!clone && <WishButton kind="game" id={game.id} soldOut={rentOut && soldOut} />}
       <div className="card-body">
         <p className="card-meta">
           {game.platform}

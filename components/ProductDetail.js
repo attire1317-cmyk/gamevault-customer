@@ -9,6 +9,8 @@ import { money, untilEnd } from '@/lib/format';
 import { useLive, useNow, useUser } from './hooks';
 import { categoryLabel } from './ProductCatalog';
 import { toast } from './Toaster';
+import { WishButton } from './wish';
+import { addToCart } from './cartStore';
 import { Stagger, Item, spring } from './motion';
 
 export default function ProductDetail({ id }) {
@@ -150,9 +152,19 @@ export default function ProductDetail({ id }) {
                 {msg}
               </p>
             )}
-            <button className="btn btn-primary btn-lg btn-block" onClick={submit} disabled={busy || out}>
-              {busy ? 'Working...' : out ? 'Out of stock' : 'Place order'}
-            </button>
+            <div className="buy-actions">
+              <button className="btn btn-primary btn-lg" onClick={() => addToCart(p.id, q)} disabled={out}>
+                {out ? 'Out of stock' : 'Add to cart'}
+              </button>
+              <button className="btn btn-ghost btn-lg" onClick={submit} disabled={busy || out}>
+                {busy ? 'Working...' : 'Buy now'}
+              </button>
+            </div>
+          </Item>
+
+          <Item className="pd-save">
+            <WishButton kind="product" id={p.id} labelled soldOut={out} />
+            {out && <span className="muted">Save it and we will tell you when it is back.</span>}
           </Item>
 
           <Item className="pd-trust">

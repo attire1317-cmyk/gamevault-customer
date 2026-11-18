@@ -3,6 +3,8 @@ import { api } from '@/lib/api';
 import { money, fmtDate, remaining } from '@/lib/format';
 import { useLive, useNow } from './hooks';
 import { Stagger, Item } from './motion';
+import Link from 'next/link';
+import { useWish, WishButton } from './wish';
 
 function RentalCard({ r, now }) {
   const active = r.status === 'active';
@@ -44,6 +46,11 @@ export default function AccountClient({ name }) {
   const rentals = useLive(() => api('/api/rentals'));
   const orders = useLive(() => api('/api/orders'));
   const gear = useLive(() => api('/api/product-orders'));
+  const wish = useWish();
+  const gamesData = useLive(() => api('/api/games'));
+  const itemsData = useLive(() => api('/api/products'));
+  const savedGames = (gamesData.data?.games || []).filter((g) => wish.games.includes(g.id));
+  const savedItems = (itemsData.data?.products || []).filter((p) => wish.products.includes(p.id));
   const now = useNow(rentals.data?.serverNow);
 
   const active = rentals.data?.rentals.filter((r) => r.status === 'active') || [];
@@ -110,6 +117,39 @@ export default function AccountClient({ name }) {
           </Stagger>
         )}
       </section>
+
+      {savedGames.length + savedItems.length > 0 && (
+        <section className="block">
+          <h2>Saved for later</h2>
+          <p className="muted saved-note">We will notify you here when a saved item is back in stock.</p>
+          <div className="grid saved-grid">
+            {savedGames.map((g) => (
+              <div key={`g${g.id}`} className="card-game mini">
+                <Link href={`/games/${g.id}`} className="card-media card-media-link" aria-label={g.title}>
+                  <img src={g.imageUrl} alt="" width="640" height="800" loading="lazy" referrerPolicy="no-referrer" />
+                </Link>
+                <WishButton kind="game" id={g.id} />
+                <div className="card-body">
+                  <h3>{g.title}</h3>
+                  <span className="muted">{g.stockRent > 0 || g.stockSale > 0 ? 'Available' : 'Out of stock'}</span>
+                </div>
+              </div>
+            ))}
+            {savedItems.map((p) => (
+              <div key={`p${p.id}`} className="card-game mini">
+                <Link href={`/shop/${p.id}`} className="card-media card-media-link" aria-label={p.name}>
+                  <img src={p.imageUrl} alt="" width="640" height="800" loading="lazy" referrerPolicy="no-referrer" />
+                </Link>
+                <WishButton kind="product" id={p.id} />
+                <div className="card-body">
+                  <h3>{p.name}</h3>
+                  <span className="muted">{p.stock > 0 ? 'Available' : 'Out of stock'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {gear.data?.orders.length > 0 && (
         <section className="block">

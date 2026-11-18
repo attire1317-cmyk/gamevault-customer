@@ -22,3 +22,10 @@ export function Item({ as = 'div', ...p }) {
 export function Providers({ children }) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }
+
+// Page-to-page slide used by paginated grids: content travels in the direction you navigate.
+export const pageSlide = {
+  enter: (d) => ({ opacity: 0, x: d * 48 }),
+  center: { opacity: 1, x: 0 },
+  exit: (d) => ({ opacity: 0, x: d * -48 }),
+};
