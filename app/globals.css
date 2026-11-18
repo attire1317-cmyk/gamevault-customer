@@ -450,10 +450,6 @@ h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; }
 /* Sort bar, cart, wishlist, notifications */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .sortbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.select-wrap { position: relative; display: inline-flex; align-items: center; }
-.select-wrap select { appearance: none; -webkit-appearance: none; min-height: 38px; padding: 0 36px 0 16px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 550; font-size: 0.9375rem; cursor: pointer; outline: none; }
-.select-wrap select:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-.select-wrap svg { position: absolute; right: 14px; pointer-events: none; color: var(--muted); }
 .chip-inline { display: inline-flex; align-items: center; gap: 6px; }
 
 .tool-btn { position: relative; }
@@ -550,3 +546,22 @@ a.notif-item:hover { background: var(--surface-2); }
 @media (min-width: 768px) { .nav-menu, .nav-scrim { display: none; } }
 @media (prefers-reduced-transparency: reduce) { .nav-bar, .nav-scrim { backdrop-filter: none; -webkit-backdrop-filter: none; } .nav-bar { background: var(--bg); } }
 @media (min-width: 768px) and (max-width: 1000px) { .nav-links { position: static; transform: none; margin-left: auto; } .nav-tools { margin-left: 8px; } }
+
+/* Sort dropdown */
+.dd { position: relative; display: inline-flex; }
+.dd-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 12px 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: 0.9375rem; transition: border-color 200ms, box-shadow 250ms, background 200ms, transform 120ms var(--ease); }
+.dd-btn:hover { background: var(--surface-2); }
+.dd-btn:active { transform: scale(0.98); }
+.dd-btn.is-open { border-color: var(--accent-text); background: var(--surface); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
+.dd-icon { flex: none; color: var(--accent-text); }
+.dd-label { color: var(--muted); font-weight: 500; }
+.dd-value { font-weight: 650; white-space: nowrap; }
+.dd-caret { display: inline-grid; place-items: center; color: var(--muted); }
+.dd-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: max(100%, 232px); max-width: min(300px, calc(100vw - 32px)); padding: 6px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(60, 40, 160, 0.2), 0 2px 8px rgba(60, 40, 160, 0.08); }
+.dd-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; outline: none; }
+.dd-opt { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 0 12px; border-radius: 10px; color: var(--text); font-weight: 550; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.dd-opt.is-selected { color: var(--accent-text); font-weight: 650; }
+.dd-hl { position: absolute; inset: 0; border-radius: 10px; background: var(--surface-2); }
+.dd-text, .dd-check { position: relative; }
+.dd-check { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+@media (max-width: 480px) { .dd-label { display: none; } .dd-menu { min-width: 220px; } }

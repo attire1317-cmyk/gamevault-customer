@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
-import { CaretDown, CheckCircle, Tag } from '@phosphor-icons/react';
+import { CheckCircle, Tag } from '@phosphor-icons/react';
+import Dropdown from './Dropdown';
 import { spring } from './motion';
 
 function Toggle({ on, onClick, icon: Icon, children }) {
@@ -17,17 +18,7 @@ function Toggle({ on, onClick, icon: Icon, children }) {
 export default function SortBar({ sort, onSort, options, deals, onDeals, stock, onStock }) {
   return (
     <div className="sortbar" role="group" aria-label="Sort and filter">
-      <label className="select-wrap">
-        <span className="sr-only">Sort by</span>
-        <select value={sort} onChange={(e) => onSort(e.target.value)}>
-          {options.map(([v, label]) => (
-            <option key={v} value={v}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <CaretDown size={14} weight="bold" aria-hidden="true" />
-      </label>
+      <Dropdown label="Sort" value={sort} onChange={onSort} options={options} />
       <Toggle on={deals} onClick={() => onDeals(!deals)} icon={Tag}>
         Deals only
       </Toggle>
