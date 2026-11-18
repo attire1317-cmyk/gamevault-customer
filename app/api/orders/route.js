@@ -2,6 +2,7 @@ import { getDb, ok, iso } from '@/lib/db';
 import { handler, json } from '@/lib/http';
 import { orderSchema } from '@/lib/validate';
 import { createOrder } from '@/lib/store';
+import { getOwnedAddress, attachAddress } from '@/lib/address';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,9 @@ export const GET = handler({ auth: true }, async ({ user }) => {
 });
 
 export const POST = handler({ auth: true, body: orderSchema }, async ({ user, data }) => {
-  const id = await createOrder(getDb(), { userId: user.id, gameId: data.gameId, qty: data.qty });
+  const db = getDb();
+  const addr = await getOwnedAddress(db, user.id, data.addressId);
+  const id = await createOrder(db, { userId: user.id, gameId: data.gameId, qty: data.qty });
+  await attachAddress(db, 'orders', [id], addr);
   return json({ id }, 201);
 });

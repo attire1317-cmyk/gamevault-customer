@@ -565,3 +565,57 @@ a.notif-item:hover { background: var(--surface-2); }
 .dd-text, .dd-check { position: relative; }
 .dd-check { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); }
 @media (max-width: 480px) { .dd-label { display: none; } .dd-menu { min-width: 220px; } }
+
+/* ---- Addresses and profile ---- */
+.link-btn { border: 0; background: none; padding: 0; color: var(--accent-text); font-weight: 600; text-decoration: underline; }
+.chip-icon { display: inline-flex; align-items: center; gap: 6px; }
+.avatar-lg { width: 64px; height: 64px; font-size: 1.5rem; background: var(--accent); color: var(--accent-ink); border: 0; }
+
+.addr-step { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-card); background: var(--surface-2); border: 1px solid var(--line); }
+.addr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.addr-h { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; }
+.addr-note { font-size: 0.9375rem; margin-top: -6px; }
+
+.addr-card { position: relative; display: flex; gap: 14px; align-items: flex-start; width: 100%; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); text-align: left; color: var(--text); transition: border-color 200ms, box-shadow 250ms, background 200ms; }
+.addr-card.is-on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.addr-card.is-pick { cursor: pointer; }
+@media (hover: hover) { .addr-card.is-pick:not(.is-on):hover { border-color: var(--accent-text); box-shadow: var(--shadow); } }
+.addr-ico { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--surface-2); color: var(--accent-text); }
+.addr-body { display: grid; gap: 2px; min-width: 0; font-size: 0.9375rem; }
+.addr-top { display: flex; align-items: center; gap: 8px; }
+.addr-name { font-weight: 550; }
+.addr-body .muted { overflow-wrap: anywhere; }
+.addr-check { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
+
+.addr-panel { overflow: hidden; }
+.addr-list { display: grid; gap: 10px; padding: 2px; }
+.addr-add { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 16px; border: 1px dashed var(--line); background: transparent; font-weight: 600; color: var(--accent-text); transition: background 200ms, border-color 200ms; }
+.addr-add:hover { background: var(--surface); border-color: var(--accent-text); }
+
+.addr-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.addr-form-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.addr-step .addr-form { padding: 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+@media (max-width: 520px) { .addr-form { grid-template-columns: 1fr; } .addr-form .field:not(.span-2) { grid-column: 1 / -1; } }
+
+.profile-card { display: grid; gap: 22px; padding: 24px; margin-bottom: 40px; border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--line); }
+.profile-top { display: flex; align-items: center; gap: 16px; }
+.profile-who { flex: 1; min-width: 0; }
+.profile-who h2 { font-size: 1.5rem; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.profile-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.profile-facts div { display: grid; gap: 6px; padding: 14px 16px; border-radius: var(--r-input); background: var(--bg); border: 1px solid var(--line); }
+.profile-facts dt { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+.profile-facts dd { font-weight: 600; }
+.profile-facts dd.wrap { overflow-wrap: anywhere; }
+.profile-edit { overflow: hidden; display: grid; gap: 14px; }
+.profile-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 2px; }
+@media (max-width: 720px) { .profile-facts, .profile-edit-grid { grid-template-columns: 1fr; } .profile-card { padding: 18px; } }
+
+.addr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .addr-grid { grid-template-columns: 1fr; } }
+.addr-card-wrap { display: grid; gap: 0; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
+.addr-card-wrap .addr-card { border: 0; border-radius: 0; box-shadow: none; padding: 18px; }
+.addr-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--line); background: var(--bg); }
+.btn.is-danger { color: var(--danger); border-color: var(--danger); }
+.addr-tile { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 170px; padding: 20px; border-radius: 18px; border: 1px dashed var(--line); background: transparent; color: var(--accent-text); text-align: center; transition: background 200ms, border-color 200ms; }
+.addr-tile:hover { background: var(--surface); border-color: var(--accent-text); }
+.addr-tile .muted { font-size: 0.875rem; }

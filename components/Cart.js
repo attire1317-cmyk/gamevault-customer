@@ -10,6 +10,7 @@ import { useLive, useUser } from './hooks';
 import { clearCart, closeCart, openCart, removeItem, setQty, useCart } from './cartStore';
 import Sheet from './Sheet';
 import { toast } from './Toaster';
+import AddressStep from './AddressStep';
 import { spring } from './motion';
 
 export function CartButton() {
@@ -36,6 +37,7 @@ function CartSheet() {
   const { data } = useLive(() => api('/api/products'));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [addressId, setAddressId] = useState(null);
 
   const lines = items.map((x) => ({ ...x, p: data?.products.find((p) => p.id === x.id) }));
   const valid = lines.filter((l) => l.p && l.p.stock > 0);
@@ -49,7 +51,7 @@ function CartSheet() {
     setBusy(true);
     setError('');
     try {
-      await api('/api/product-orders/cart', { method: 'POST', body: { items: valid.map((l) => ({ productId: l.id, qty: Math.min(l.qty, l.p.stock, 5) })) } });
+      await api('/api/product-orders/cart', { method: 'POST', body: { addressId, items: valid.map((l) => ({ productId: l.id, qty: Math.min(l.qty, l.p.stock, 5) })) } });
       clearCart();
       closeCart();
       toast('Order placed. The shop will confirm it shortly.');
@@ -113,12 +115,13 @@ function CartSheet() {
               <dd className="mono">{money(total)}</dd>
             </div>
           </dl>
+          {user && <AddressStep value={addressId} onChange={setAddressId} />}
           {error && (
             <p className="form-error" role="alert">
               {error}
             </p>
           )}
-          <button className="btn btn-primary btn-lg btn-block" onClick={checkout} disabled={busy || valid.length === 0}>
+          <button className="btn btn-primary btn-lg btn-block" onClick={checkout} disabled={busy || valid.length === 0 || (user && !addressId)}>
             {busy ? 'Placing order...' : user === null ? 'Sign in to order' : 'Place order'}
           </button>
         </>

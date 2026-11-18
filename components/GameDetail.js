@@ -9,6 +9,7 @@ import { money, fmtDate, untilEnd } from '@/lib/format';
 import { useLive, useNow, useUser } from './hooks';
 import GameCard from './GameCard';
 import { toast } from './Toaster';
+import AddressStep from './AddressStep';
 import { WishButton } from './wish';
 import { Stagger, Item, spring } from './motion';
 
@@ -30,6 +31,7 @@ export default function GameDetail({ id }) {
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [addressId, setAddressId] = useState(null);
 
   if (!data) {
     return (
@@ -87,11 +89,12 @@ export default function GameDetail({ id }) {
 
   async function submit() {
     if (user === null) return router.push(`/login?next=${encodeURIComponent(`/games/${game.id}`)}`);
+    if (!addressId) return setMsg('Choose a delivery address.');
     setBusy(true);
     setMsg('');
     try {
-      if (rent) await api('/api/rentals', { method: 'POST', body: { gameId: game.id, days } });
-      else await api('/api/orders', { method: 'POST', body: { gameId: game.id, qty } });
+      if (rent) await api('/api/rentals', { method: 'POST', body: { gameId: game.id, days, addressId } });
+      else await api('/api/orders', { method: 'POST', body: { gameId: game.id, qty, addressId } });
       toast(rent ? `${game.title} is yours until ${dueLabel}.` : 'Order placed. The shop will confirm it shortly.');
       router.push('/account');
     } catch (e) {
@@ -210,12 +213,14 @@ export default function GameDetail({ id }) {
                 </div>
               </dl>
 
+              {user && <AddressStep value={addressId} onChange={setAddressId} />}
+
               {msg && (
                 <p className="form-error" role="alert">
                   {msg}
                 </p>
               )}
-              <button className="btn btn-primary btn-lg btn-block" onClick={submit} disabled={busy || stock < 1}>
+              <button className="btn btn-primary btn-lg btn-block" onClick={submit} disabled={busy || stock < 1 || (user && !addressId)}>
                 {busy ? 'Working...' : stock < 1 ? (rent ? 'Rented out' : 'Sold out') : rent ? 'Rent this game' : 'Buy this game'}
               </button>
             </Item>

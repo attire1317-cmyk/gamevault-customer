@@ -6,6 +6,7 @@ import { api, errText } from '@/lib/api';
 import { money, fmtDate } from '@/lib/format';
 import Sheet from './Sheet';
 import { toast } from './Toaster';
+import AddressStep from './AddressStep';
 
 const DAY = 86_400_000;
 
@@ -15,6 +16,7 @@ export default function Checkout({ game, mode, now, onClose }) {
   const [n, setN] = useState(rent ? 3 : 1); // days or quantity
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [addressId, setAddressId] = useState(null);
 
   const max = rent ? 30 : Math.min(3, game.stockSale);
   const unit = rent ? game.rentFinal : game.buyFinal;
@@ -26,8 +28,8 @@ export default function Checkout({ game, mode, now, onClose }) {
     setBusy(true);
     setError('');
     try {
-      if (rent) await api('/api/rentals', { method: 'POST', body: { gameId: game.id, days: n } });
-      else await api('/api/orders', { method: 'POST', body: { gameId: game.id, qty: n } });
+      if (rent) await api('/api/rentals', { method: 'POST', body: { gameId: game.id, days: n, addressId } });
+      else await api('/api/orders', { method: 'POST', body: { gameId: game.id, qty: n, addressId } });
       toast(rent ? `${game.title} is yours until ${dueLabel}.` : 'Order placed. The shop will confirm it shortly.');
       onClose();
       router.push('/account');
@@ -50,6 +52,8 @@ export default function Checkout({ game, mode, now, onClose }) {
           <span className="muted">{game.platform}</span>
         </div>
       </div>
+
+      <AddressStep value={addressId} onChange={setAddressId} />
 
       <div className="field">
         <label htmlFor="co-n">{rent ? 'How many days?' : 'How many copies?'}</label>
@@ -105,7 +109,7 @@ export default function Checkout({ game, mode, now, onClose }) {
           {error}
         </p>
       )}
-      <button className="btn btn-primary btn-lg btn-block" onClick={submit} disabled={busy}>
+      <button className="btn btn-primary btn-lg btn-block" onClick={submit} disabled={busy || !addressId}>
         {busy ? 'Working...' : rent ? 'Confirm rental' : 'Place order'}
       </button>
     </Sheet>

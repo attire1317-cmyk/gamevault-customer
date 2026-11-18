@@ -37,3 +37,12 @@ components/   UI
 lib/          db.js (Supabase), auth, validation, live.js (Realtime)
 supabase/     schema.sql (identical in both apps)
 ```
+
+## Profile and delivery addresses
+
+1. Run `supabase/add-addresses.sql` once in Supabase (SQL Editor). Deploy after that, not before.
+2. `/profile`: customer name, phone, email and up to 2 saved addresses (add, edit, delete, make default).
+3. Every rent or buy (games, consoles, cart) asks for a delivery address first. The default one is pre-selected and
+   "Switch address" picks the other. New customers add their first address right there.
+4. Each rental and order stores a copy of the address in its `address` column (jsonb), so later edits never change
+   past orders. For the admin app, read it like: `address->>'line1'`, `city`, `state`, `pincode`, `name`, `phone`.

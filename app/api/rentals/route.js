@@ -2,6 +2,7 @@ import { getDb, ok, iso } from '@/lib/db';
 import { handler, json } from '@/lib/http';
 import { rentalSchema } from '@/lib/validate';
 import { createRental } from '@/lib/store';
+import { getOwnedAddress, attachAddress } from '@/lib/address';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,6 +36,9 @@ export const GET = handler({ auth: true }, async ({ user }) => {
 });
 
 export const POST = handler({ auth: true, body: rentalSchema }, async ({ user, data }) => {
-  const id = await createRental(getDb(), { userId: user.id, gameId: data.gameId, days: data.days });
+  const db = getDb();
+  const addr = await getOwnedAddress(db, user.id, data.addressId);
+  const id = await createRental(db, { userId: user.id, gameId: data.gameId, days: data.days });
+  await attachAddress(db, 'rentals', [id], addr);
   return json({ id }, 201);
 });

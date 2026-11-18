@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarCheck, CaretDown, GameController, House, SignOut, Storefront } from '@phosphor-icons/react';
+import { CalendarCheck, CaretDown, GameController, House, SignOut, Storefront, UserCircle } from '@phosphor-icons/react';
 import { api } from '@/lib/api';
 import { reconnectLive } from '@/lib/live';
 import { refreshUser, useUser } from './hooks';
@@ -59,6 +59,9 @@ function UserMenu({ user, onLogout }) {
               <strong>{user.name}</strong>
               <span className="muted">{user.email}</span>
             </div>
+            <Link href="/profile" role="menuitem" className="user-item" onClick={() => setOpen(false)}>
+              <UserCircle size={18} weight="bold" /> Profile
+            </Link>
             <Link href="/account" role="menuitem" className="user-item" onClick={() => setOpen(false)}>
               <CalendarCheck size={18} weight="bold" /> My rentals
             </Link>
@@ -225,6 +228,9 @@ export default function Nav() {
                             <small className="muted">{user.email}</small>
                           </span>
                         </div>
+                        <Link href="/profile" className="btn btn-ghost">
+                          <UserCircle size={18} weight="bold" /> Profile
+                        </Link>
                         <button className="btn btn-ghost" onClick={logout}>
                           <SignOut size={18} weight="bold" /> Sign out
                         </button>

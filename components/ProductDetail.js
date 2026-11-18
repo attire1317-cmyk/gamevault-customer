@@ -9,6 +9,7 @@ import { money, untilEnd } from '@/lib/format';
 import { useLive, useNow, useUser } from './hooks';
 import { categoryLabel } from './ProductCatalog';
 import { toast } from './Toaster';
+import { AddressSheet } from './AddressStep';
 import { WishButton } from './wish';
 import { addToCart } from './cartStore';
 import { Stagger, Item, spring } from './motion';
@@ -21,6 +22,7 @@ export default function ProductDetail({ id }) {
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [ask, setAsk] = useState(false);
 
   if (!data) {
     return (
@@ -64,12 +66,18 @@ export default function ProductDetail({ id }) {
   const q = Math.min(qty, max);
   const related = data.products.filter((x) => x.id !== p.id && x.category === p.category).slice(0, 4);
 
-  async function submit() {
+  // "Buy now" asks for the delivery address first, in a sheet.
+  function submit() {
     if (user === null) return router.push(`/login?next=${encodeURIComponent(`/shop/${p.id}`)}`);
+    setMsg('');
+    setAsk(true);
+  }
+
+  async function confirm(addressId) {
     setBusy(true);
     setMsg('');
     try {
-      await api('/api/product-orders', { method: 'POST', body: { productId: p.id, qty: q } });
+      await api('/api/product-orders', { method: 'POST', body: { productId: p.id, qty: q, addressId } });
       toast('Order placed. The shop will confirm it shortly.');
       router.push('/account');
     } catch (e) {
@@ -226,6 +234,16 @@ export default function ProductDetail({ id }) {
             ))}
           </div>
         </section>
+      )}
+      {ask && (
+        <AddressSheet title={`Buy ${p.name}`} confirmLabel="Place order" busy={busy} error={msg} onConfirm={confirm} onClose={() => { setAsk(false); setBusy(false); }}>
+          <dl className="summary">
+            <div>
+              <dt>{q} x {money(p.finalPrice)}</dt>
+              <dd className="mono">{money(p.finalPrice * q)}</dd>
+            </div>
+          </dl>
+        </AddressSheet>
       )}
     </main>
   );
