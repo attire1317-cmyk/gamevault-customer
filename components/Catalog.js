@@ -1,13 +1,13 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass } from '@phosphor-icons/react';
 import { api } from '@/lib/api';
 import { useLive, useNow } from './hooks';
 import { useShop } from './useShop';
 import GameCard, { GridSkeleton } from './GameCard';
 import Pagination from './Pagination';
 import SortBar from './SortBar';
+import SearchBox, { matchScore } from './SearchBox';
 import { spring, pageSlide as slide } from './motion';
 
 const PLATFORMS = ['All', 'PS5', 'PS4', 'Xbox Series X|S', 'Xbox One', 'Nintendo Switch'];
@@ -28,19 +28,25 @@ export default function Catalog() {
   const now = useNow(data?.serverNow);
   const { act, sheet } = useShop(data, now);
   const [platform, setPlatform] = useState('All');
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(''); // applied by the Search button
+  const [draft, setDraft] = useState(''); // what is typed
   const [sort, setSort] = useState('new');
   const [deals, setDeals] = useState(false);
   const [stock, setStock] = useState(false);
   const [[page, dir], setPage] = useState([1, 0]);
   const top = useRef(null);
 
+  const suggest = useMemo(
+    () => (data?.games || []).map((g) => ({ id: g.id, title: g.title, sub: `${g.platform}${g.genre ? `, ${g.genre}` : ''}`, img: g.imageUrl, hay: `${g.genre} ${g.platform}`.toLowerCase() })),
+    [data]
+  );
+
   const games = useMemo(() => {
     const term = q.trim().toLowerCase();
     const list = (data?.games || []).filter(
       (g) =>
         (platform === 'All' || g.platform === platform) &&
-        (!term || `${g.title} ${g.genre}`.toLowerCase().includes(term)) &&
+        (!term || matchScore(g.title, `${g.genre} ${g.platform}`, term) < 9) &&
         (!deals || discount(g) > 0) &&
         (!stock || inStock(g))
     );
@@ -68,20 +74,23 @@ export default function Catalog() {
         <div className="container">
           <h1 className="section-title">All games</h1>
           <div className="toolbar">
-            <div className="search">
-              <MagnifyingGlass size={18} />
-              <input
-                type="search"
-                placeholder="Search by title or genre"
-                aria-label="Search games"
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
+            <SearchBox
+              items={suggest}
+              value={draft}
+              label="Search games"
+              placeholder="Search by title or genre"
+              onChange={(v) => {
+                setDraft(v);
+                if (!v.trim()) {
+                  setQ('');
                   resetPage();
-                }}
-                maxLength={60}
-              />
-            </div>
+                }
+              }}
+              onSubmit={(t) => {
+                setQ(t);
+                resetPage();
+              }}
+            />
             <div className="chips" role="group" aria-label="Platform">
               {PLATFORMS.map((p) => (
                 <button
@@ -117,6 +126,7 @@ export default function Catalog() {
                   className="btn btn-ghost"
                   onClick={() => {
                     setQ('');
+                    setDraft('');
                     setPlatform('All');
                     setDeals(false);
                     setStock(false);
@@ -130,7 +140,7 @@ export default function Catalog() {
           ) : (
             <>
               <p className="muted result-count" aria-live="polite">
-                Showing {(current - 1) * PAGE_SIZE + 1} to {(current - 1) * PAGE_SIZE + shown.length} of {games.length}
+                {q ? `Results for “${q}”: ` : ''}Showing {(current - 1) * PAGE_SIZE + 1} to {(current - 1) * PAGE_SIZE + shown.length} of {games.length}
               </p>
               <AnimatePresence mode="wait" custom={dir} initial={false}>
                 <motion.div

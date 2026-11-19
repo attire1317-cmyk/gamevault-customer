@@ -2,13 +2,14 @@
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MagnifyingGlass, Tag } from '@phosphor-icons/react';
+import { Tag } from '@phosphor-icons/react';
 import { api } from '@/lib/api';
 import { money } from '@/lib/format';
 import { useLive } from './hooks';
 import { GridSkeleton } from './GameCard';
 import Pagination from './Pagination';
 import SortBar from './SortBar';
+import SearchBox, { matchScore } from './SearchBox';
 import { WishButton } from './wish';
 import { addToCart } from './cartStore';
 import { spring, pageSlide } from './motion';
@@ -81,16 +82,22 @@ export default function ProductCatalog() {
   const { data, error, refresh } = useLive(() => api('/api/products'));
   const [cat, setCat] = useState('all');
   const [q, setQ] = useState('');
+  const [draft, setDraft] = useState('');
   const [sort, setSort] = useState('new');
   const [deals, setDeals] = useState(false);
   const [stock, setStock] = useState(false);
   const [[page, dir], setPage] = useState([1, 0]);
   const top = useRef(null);
 
+  const suggest = useMemo(
+    () => (data?.products || []).map((p) => ({ id: p.id, title: p.name, sub: `${categoryLabel(p.category)}${p.brand ? `, ${p.brand}` : ''}`, img: p.imageUrl, hay: `${p.brand} ${p.category}`.toLowerCase() })),
+    [data]
+  );
+
   const items = useMemo(() => {
     const term = q.trim().toLowerCase();
     const list = (data?.products || []).filter(
-      (p) => (cat === 'all' || p.category === cat) && (!term || `${p.name} ${p.brand}`.toLowerCase().includes(term)) && (!deals || p.percent > 0) && (!stock || p.stock > 0)
+      (p) => (cat === 'all' || p.category === cat) && (!term || matchScore(p.name, `${p.brand} ${p.category}`, term) < 9) && (!deals || p.percent > 0) && (!stock || p.stock > 0)
     );
     const by = { low: (a, b) => a.finalPrice - b.finalPrice, high: (a, b) => b.finalPrice - a.finalPrice, deal: (a, b) => b.percent - a.percent, az: (a, b) => a.name.localeCompare(b.name) }[sort];
     return by ? [...list].sort(by) : list;
@@ -115,13 +122,23 @@ export default function ProductCatalog() {
       <div className="container">
         <h1 className="section-title">Consoles and accessories</h1>
         <div className="toolbar">
-          <div className="search">
-            <MagnifyingGlass size={18} />
-            <input type="search" placeholder="Search consoles and accessories" aria-label="Search the shop" value={q} onChange={(e) => {
-                setQ(e.target.value);
+          <SearchBox
+            items={suggest}
+            value={draft}
+            label="Search the shop"
+            placeholder="Search consoles and accessories"
+            onChange={(v) => {
+              setDraft(v);
+              if (!v.trim()) {
+                setQ('');
                 resetPage();
-              }} maxLength={60} />
-          </div>
+              }
+            }}
+            onSubmit={(t) => {
+              setQ(t);
+              resetPage();
+            }}
+          />
           <div className="chips" role="group" aria-label="Category">
             {CATEGORIES.map(([k, label]) => (
               <button key={k} className={`chip ${cat === k ? 'is-on' : ''}`} onClick={() => {
@@ -152,7 +169,7 @@ export default function ProductCatalog() {
         ) : (
           <>
             <p className="muted result-count" aria-live="polite">
-              Showing {(current - 1) * PAGE_SIZE + 1} to {(current - 1) * PAGE_SIZE + shown.length} of {items.length}
+              {q ? `Results for “${q}”: ` : ''}Showing {(current - 1) * PAGE_SIZE + 1} to {(current - 1) * PAGE_SIZE + shown.length} of {items.length}
             </p>
             <AnimatePresence mode="wait" custom={dir} initial={false}>
               <motion.div key={`${current}-${cat}`} className="grid" custom={dir} variants={pageSlide} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}>
