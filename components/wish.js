@@ -61,7 +61,7 @@ export function WishButton({ kind, id, labelled = false, className = '', soldOut
     emit({ ...state, [key]: on ? list.filter((x) => x !== id) : [...list, id] });
     try {
       await api('/api/wishlist', { method: 'POST', body: { [kind === 'game' ? 'gameId' : 'productId']: id, on: !on } });
-      if (!on) toast(soldOut ? 'Saved. We will tell you when it is back.' : 'Saved to your list.');
+      if (!on) toast(soldOut ? 'Saved. We will tell you when it is back.' : 'Saved to your list.', 'saved', { action: { label: 'View saved', href: '/saved' } });
     } catch (err) {
       emit(prev);
       toast(errText(err), 'error');

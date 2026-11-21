@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarCheck, CaretDown, GameController, House, SignOut, Storefront, UserCircle } from '@phosphor-icons/react';
+import { CalendarCheck, CaretDown, GameController, Heart, House, SignOut, Storefront, UserCircle } from '@phosphor-icons/react';
 import { api } from '@/lib/api';
 import { reconnectLive } from '@/lib/live';
 import { refreshUser, useUser } from './hooks';
 import { spring } from './motion';
 import CartDrawer, { CartButton } from './Cart';
 import Notifications from './Notifications';
+import { useWish } from './wish';
 
 const STORE = process.env.NEXT_PUBLIC_STORE_NAME || 'GameVault';
 const ease = [0.16, 1, 0.3, 1];
@@ -24,6 +25,42 @@ function Burger({ open }) {
       <motion.span animate={open ? { y: 4, rotate: 45 } : { y: -4, rotate: 0 }} transition={t} />
       <motion.span animate={open ? { y: -4, rotate: -45 } : { y: 4, rotate: 0 }} transition={t} />
     </span>
+  );
+}
+
+// The count badge pops in when you log in or save something, stays a few seconds, then fades out.
+function SavedButton() {
+  const w = useWish();
+  const n = w.games.length + w.products.length;
+  const prev = useRef(null);
+  const [show, setShow] = useState(false);
+  const [bump, setBump] = useState(0);
+
+  useEffect(() => {
+    if (!w.ready) return;
+    const first = prev.current === null;
+    const changed = !first && prev.current !== n;
+    prev.current = n;
+    if (n === 0 || !(first || changed)) return setShow(false);
+    setShow(true);
+    if (changed) setBump((b) => b + 1);
+    const t = setTimeout(() => setShow(false), 3800);
+    return () => clearTimeout(t);
+  }, [w.ready, n]);
+
+  return (
+    <Link href="/saved" className="icon-btn tool-btn" aria-label={`Saved, ${n} ${n === 1 ? 'item' : 'items'}`}>
+      <motion.span key={bump} style={{ display: 'inline-grid' }} animate={bump ? { scale: [1, 1.3, 1] } : undefined} transition={{ duration: 0.4 }}>
+        <Heart size={20} weight={show ? 'fill' : 'bold'} className={show ? 'heart-on' : ''} />
+      </motion.span>
+      <AnimatePresence>
+        {show && (
+          <motion.span key={n} className="tool-badge" initial={{ scale: 0.3, opacity: 0, y: 6 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.8, opacity: 0, y: -4, transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] } }} transition={{ type: 'spring', stiffness: 420, damping: 18 }}>
+            {n}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
   );
 }
 
@@ -64,6 +101,9 @@ function UserMenu({ user, onLogout }) {
             </Link>
             <Link href="/account" role="menuitem" className="user-item" onClick={() => setOpen(false)}>
               <CalendarCheck size={18} weight="bold" /> My rentals
+            </Link>
+            <Link href="/saved" role="menuitem" className="user-item" onClick={() => setOpen(false)}>
+              <Heart size={18} weight="bold" /> Saved
             </Link>
             <button role="menuitem" className="user-item" onClick={onLogout}>
               <SignOut size={18} weight="bold" /> Sign out
@@ -124,7 +164,7 @@ export default function Nav() {
     { href: '/', label: 'Home', icon: House },
     { href: '/games', label: 'Games', icon: GameController },
     { href: '/shop', label: 'Shop', icon: Storefront },
-    ...(user ? [{ href: '/account', label: 'My rentals', icon: CalendarCheck }] : []),
+    ...(user ? [{ href: '/account', label: 'My rentals', icon: CalendarCheck }, { href: '/saved', label: 'Saved', icon: Heart, mobileOnly: true }] : []),
   ];
   const isOn = (href) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
   const active = links.find((l) => isOn(l.href))?.href;
@@ -160,7 +200,7 @@ export default function Nav() {
 
             <nav ref={rail} className="nav-links" aria-label="Main">
               {pill && <motion.span className="nav-pill" aria-hidden="true" initial={false} animate={{ x: pill.x, y: pill.y, width: pill.w, height: pill.h }} transition={spring} />}
-              {links.map((l) => (
+              {links.filter((l) => !l.mobileOnly).map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
@@ -177,6 +217,7 @@ export default function Nav() {
 
             <div className="nav-tools">
               <CartButton />
+              {user && <SavedButton />}
               {user && <Notifications />}
               <div className="nav-account">
                 {user === undefined ? null : user ? (

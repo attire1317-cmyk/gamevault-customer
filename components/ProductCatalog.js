@@ -31,7 +31,7 @@ export const CATEGORIES = [
 ];
 export const categoryLabel = (c) => CATEGORIES.find(([k]) => k === c)?.[1].replace(/s$/, '') ?? c;
 
-function ProductCard({ p, index }) {
+export function ProductCard({ p, index }) {
   const out = p.stock < 1;
   return (
     <motion.article
